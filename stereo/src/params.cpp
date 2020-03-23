@@ -22,7 +22,7 @@ void set_kitti_Params()
 {
 	MIN_DIST = 30;
 	BASELINE = 0.537165718864418;
-	MAX_CNT = 200;
+	MAX_CNT = 400;
 	WINDOW_SIZE = 10;
 
 	fx =  7.18856e+02;

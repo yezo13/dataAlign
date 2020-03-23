@@ -70,19 +70,27 @@ void OpticalSLAM::trackStereoFrames(const Mat& leftImg, const Mat& rightImg)
 
 void OpticalSLAM::display()
 {
-	float fx = 277.34;
+    
+    float fx = 277.34;
     float fy = 291.402;
     float cx = 312.234;
     float cy = 239.777;
+    /*
+    fx *= 10;
+    fy *= 10;
+    cx *= 10;
+    cy *= 10;
+    */
     // create pangolin window and plot the trajectory
-    pangolin::CreateWindowAndBind("Trajectory Viewer", 1024, 768);
+    pangolin::CreateWindowAndBind("Trajectory Viewer", 1600, 1200);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     pangolin::OpenGlRenderState s_cam(
-            pangolin::ProjectionMatrix(1024, 768, 500, 500, 512, 389, 0.1, 1000),
-            pangolin::ModelViewLookAt(0, -0.1, -1.8, 0, 0, 0, 0.0, -1.0, 0.0)
+            pangolin::ProjectionMatrix(1024*2, 768*2, 500, 500, 512, 389, 0.1, 1000),
+            //lookat (0 -0.1 -1.8) (0 0 0) (0.0 -1.0 0.0)
+	    pangolin::ModelViewLookAt(0, 0, -50, 0, 0, 10, 0.0, -0.001, 0.0) //camera's place first 3 is the camera pos  z be high and the traj will be good
             /*pangolin::ModelViewLookAt(0, 10, -10, 0, 0, 0, 0.0, 1.0, 0.0)*/
     );
 
@@ -92,14 +100,16 @@ void OpticalSLAM::display()
 
    
     while (pangolin::ShouldQuit() == false) {
+        pangolin::glDrawAxis(3);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         d_cam.Activate(s_cam);
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         // draw poses
-        float sz = 0.3;
-        int width = 640, height = 480;
+	//控制框的大小
+        float sz = 1;
+        int width = 640, height = 480;  
         
         // glLineWidth(2);
         // if(Trajectory2.size() > 1)
@@ -147,6 +157,8 @@ void OpticalSLAM::display()
         if(ready_to_display)
         {
             m_pose.lock();
+	    //this is used to draw the triangle
+	    
             for(int i = 0; i < WINDOW_SIZE; ++i)
             {
                 glPushMatrix();
@@ -156,9 +168,9 @@ void OpticalSLAM::display()
                 //current_pos = current_pos.inverse();
                 glMultMatrixd((GLdouble *) current_pos.data());
                 glColor3f(1, i/12.0, 0);
-                glLineWidth(2);
+                glLineWidth(1);
                 glBegin(GL_LINES);
-                glVertex3f(0, 0, 0);
+                glVertex3f(0, 0, 0);  //画点的函数，x、y、z
                 glVertex3f(sz * (0 - cx) / fx, sz * (0 - cy) / fy, sz);
                 glVertex3f(0, 0, 0);
                 glVertex3f(sz * (0 - cx) / fx, sz * (height - 1 - cy) / fy, sz);
@@ -177,15 +189,17 @@ void OpticalSLAM::display()
                 glEnd();
                 glPopMatrix();
             }
+            
 
             glLineWidth(2);
+	    //this is draw the trajectory line
             if(trj.size() > 1)
             {
                 for(int i = 0;i < trj.size() - 1;i++)
                 {
                     glColor3f(0, 1, 0);
                     glBegin(GL_LINES);
-                    auto p1 = trj[i], p2 = trj[i + 1];
+                    auto p1 = trj[i] , p2 = trj[i + 1] ;
                     glVertex3d(p1[0], p1[1], p1[2]);
                     glVertex3d(p2[0], p2[1], p2[2]);
                     glEnd();

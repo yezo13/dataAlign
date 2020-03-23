@@ -101,6 +101,7 @@ void ImageManager::stereoMatch(std::vector<cv::Point2f>& left_points,
 	      inlier_markers[i] = 0;
  	}
 
+ 
  	removeOutliers(left_points, inlier_markers);
  	removeOutliers(right_points, inlier_markers);
 
@@ -109,6 +110,7 @@ void ImageManager::stereoMatch(std::vector<cv::Point2f>& left_points,
 
 	removeOutliers(left_points, status2);
  	removeOutliers(right_points, status2);
+
 }
 void ImageManager::checkEpipolarConstraint(const vector<Point2f>& pts0, const vector<Point2f>& pts1, vector<uchar>& status, double threshold)
 {
@@ -217,12 +219,17 @@ void ImageManager::trackStereoFrames(const Mat& leftImg, const Mat& rightImg)
  	removeOutliers(cur_left_pts, status1);
  	removeOutliers(prev_left_pts, status1);
  	removeOutliers(ids, status1);
-
+	 
+	//把这里的去除外点工作注释掉 0001 02 03就可以继续跑了
+	/**/
  	vector<uchar> status2;
 	findFundamentalMat(prev_left_pts, cur_left_pts, cv::FM_RANSAC, 1.0, 0.99, status2);
 	removeOutliers(cur_left_pts, status2);
  	removeOutliers(prev_left_pts, status2);
  	removeOutliers(ids, status2);
+	
+	
+
  	pre.resize(prev_left_pts.size());
  	cur.resize(cur_left_pts.size());
 
@@ -239,7 +246,9 @@ void ImageManager::trackStereoFrames(const Mat& leftImg, const Mat& rightImg)
 		cur_left_pts.clear();
 		return;
 	}
-
+	
+	//status2 comment here is over 
+	
  	//vector<Point2f> prevPtsRightS;
  	vector<unsigned char> status3;
  	vector<unsigned char> status4;
@@ -262,7 +271,7 @@ void ImageManager::trackStereoFrames(const Mat& leftImg, const Mat& rightImg)
 		        prev_right_pts[i].x > prev_right_img.cols-1)
 		      status3[i] = 0;
 		}
-
+		//0117 无影响
 		removeOutliers(cur_left_pts, status3);
 	 	removeOutliers(prev_left_pts, status3);
 	 	removeOutliers(prev_right_pts, status3);
@@ -272,10 +281,14 @@ void ImageManager::trackStereoFrames(const Mat& leftImg, const Mat& rightImg)
 	 	//checkEpipolarConstraint(prev_left_pts, prev_right_pts, status4, 0.003);
 	 	checkShiftsOnY(prev_left_pts, prev_right_pts, status4, ShiftOnYTHS);
 
+		
+		/*  注释掉这个之后0117能跑一部分  其余部分是因为用那个goodfeatrue添加外点的时候溢出 现在可以了 这个是判断Y轴来去除坏点
+		
 		removeOutliers(prev_left_pts, status4);
 	 	removeOutliers(prev_right_pts, status4);
 	 	removeOutliers(cur_left_pts, status4);
 	 	removeOutliers(ids, status4);
+	 	  */
 
 	 	// Mat debug = prev_left_img.clone();
 	 	// cvtColor(debug, debug, CV_GRAY2BGR);
@@ -373,8 +386,8 @@ void ImageManager::trackStereoFrames(const Mat& leftImg, const Mat& rightImg)
 		 	removeOutliers(prev_right_pts, status4);
 		 	removeOutliers(newFeatCur, status4);
 		 	//removeOutliers(ids, status4);
-
-		 	int newsize = ii + 1 + newFeatCur.size();
+			cout << "testii: " << ii << "test:" <<  newFeatCur.size() << endl;
+		 	int newsize = ii + 1 + newFeatCur.size();  //!!! bug is here 
 
 		 	for(int i = ii; i < newsize; ++i)
 		 	{
@@ -467,10 +480,12 @@ void ImageManager::trackStereoFrames(const Mat& leftImg, const Mat& rightImg)
 
 		 	//findFundamentalMat(newFeatPre, prev_right_pts, cv::FM_RANSAC, 1.0, 0.99, status4);
 		 	//checkEpipolarConstraint(newFeatPre, prev_right_pts, status4, 0.003);
+			/*
 		 	checkShiftsOnY(newFeatPre, prev_right_pts, status4, ShiftOnYTHS);
 			removeOutliers(newFeatPre, status4);
 		 	removeOutliers(prev_right_pts, status4);
 		 	removeOutliers(newFeatCur, status4);
+		 	*/
 		 	//removeOutliers(ids, status4);
 
 		 	int newsize = ii + 1 + newFeatCur.size();
@@ -602,8 +617,10 @@ void ImageManager::trackStereoFrames(const Mat& leftImg, const Mat& rightImg)
 
 		 	// tmpR1 = tmpR1.transpose();
 		 	// tmpT1 = -tmpR1.transpose()*tmpT1;
+			
+			cout << "maybe:" << tmp2d.size() << " 3d is " << tmp3d.size();
 
-		 	solvePnP(tmp3d, tmp2d, tmpR1, tmpT1, false);
+		 	solvePnP(tmp3d, tmp2d, tmpR1, tmpT1,false);
 		 	//cout<<tmpT1.transpose()<<endl<<endl;
 			allRpnp2.push_back(tmpR1.transpose());
 			allTp.push_back(tmpT1.transpose());
@@ -619,13 +636,16 @@ void ImageManager::trackStereoFrames(const Mat& leftImg, const Mat& rightImg)
 	}
  	vector<Point2f> newFeat;
  	setMask();
-	goodFeaturesToTrack(cur_left_img, newFeat,MAX_CNT - cur_left_pts.size(),0.01,MIN_DIST,mask);
-	for(int i = 0; i < newFeat.size(); ++i)
-	{
-		cur_left_pts.emplace_back(newFeat[i]);
-		ids.push_back(-1);
+	cout << "MAX" << MAX_CNT - cur_left_pts.size() <<endl; //this may be float out and crash
+	if(MAX_CNT - cur_left_pts.size() > 0 && MAX_CNT - cur_left_pts.size() < MAX_CNT){
+	
+	  goodFeaturesToTrack(cur_left_img, newFeat,MAX_CNT - cur_left_pts.size(),0.01,MIN_DIST,mask);
+	  for(int i = 0; i < newFeat.size(); ++i)
+	  {
+		  cur_left_pts.emplace_back(newFeat[i]);
+		  ids.push_back(-1);
+	  }
 	}
-
 	swap(cur_left_pts, prev_left_pts);
 	swap(cur_left_pyramid_, prev_left_pyramid_);
     swap(cur_right_pyramid_, prev_right_pyramid_);
@@ -733,7 +753,7 @@ void ImageManager::buildCoarse3DStructure()
 		Matrix3d R_init = Rot[i-1];
 		Vector3d t_init = Trans[i-1];
 		if(!solvePnP(p3d, p2d, R_init, t_init, true))
-			cout<<"failed to solvePnP"<<endl;
+			cout<<"Warning! failed to solvePnP"<<endl;
 
 		Rp[i] = R_init.transpose();
 		tp[i] = -R_init.transpose()*t_init;
@@ -762,7 +782,7 @@ void ImageManager::buildCoarse3DStructure()
 		Matrix3d R_init = Rot[i+1];
 		Vector3d t_init = Trans[i+1];
 		if(!solvePnP(p3d, p2d, R_init, t_init, true))
-			cout<<"failed to solvePnP"<<endl;
+			cout<<"Warning!failed to solvePnP"<<endl;
 
 		Rp[i] = R_init.transpose();
 		tp[i] = -R_init.transpose()*t_init;
@@ -800,7 +820,7 @@ bool ImageManager::solvePnP(const vector<Point3f>& p3d, const vector<Point2f>& p
 	if(use_ransac)
 		pnp_succ = cv::solvePnPRansac(p3d, p2d, K, D, rvec, t, true, 100, 8.0, 0.99, inliers);
 	else
-		pnp_succ = cv::solvePnP(p3d, p2d, K, D, rvec, t, 1);
+		pnp_succ = cv::solvePnP(p3d, p2d, K, D, rvec, t, cv::SOLVEPNP_EPNP);
 
 	if(!pnp_succ)
 	{

@@ -1,0 +1,7 @@
+/home/yezotemp/projects/rgb2gray/build/CMakeFiles/install.dir
+/home/yezotemp/projects/rgb2gray/build/CMakeFiles/list_install_components.dir
+/home/yezotemp/projects/rgb2gray/build/CMakeFiles/rebuild_cache.dir
+/home/yezotemp/projects/rgb2gray/build/CMakeFiles/rgb2gray.dir
+/home/yezotemp/projects/rgb2gray/build/CMakeFiles/install/local.dir
+/home/yezotemp/projects/rgb2gray/build/CMakeFiles/install/strip.dir
+/home/yezotemp/projects/rgb2gray/build/CMakeFiles/edit_cache.dir

@@ -1,0 +1,4 @@
+[Project]
+Name=rgb2gray
+Manager=KDevCMakeManager
+VersionControl=

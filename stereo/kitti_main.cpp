@@ -7,7 +7,10 @@
 
 using namespace std;
 
-const string path = "/home/yezotemp/dataset/2011_09_26/sync_0009/";
+
+const string prename = "school_01";
+const string path = "/home/yezotemp/dataset/2011_09_26/" + prename + "/";
+
 
 bool getImages(vector<string>& files)
 {
@@ -56,13 +59,14 @@ int main()
 	std::thread slam_thread([&](){
 		for(int i = 0;i < sImgs.size(); ++i)
 		{
-			string strLeftImg = path + "image_02/data/" + sImgs[i];
-			string strRightImg = path + "image_03/data/" + sImgs[i];
+			string strLeftImg = path + "image_00/data/" + sImgs[i];
+			string strRightImg = path + "image_01/data/" + sImgs[i];
 			cout << strLeftImg << endl << strRightImg << endl;
-			/* use gray img
-			Mat leftImg = imread(strLeftImg, 0);;
-			Mat rightImg = imread(strRightImg, 0);;
-			*/
+			// use gray img
+			Mat leftImg = imread(strLeftImg,0);
+			Mat rightImg = imread(strRightImg,0);
+			
+			/*
 			Mat leftrgbImg = imread(strLeftImg);  //imread function second params means 0-gary   1-rgb
 			Mat rightrgbImg = imread(strRightImg);
 			Mat leftImg;
@@ -70,6 +74,7 @@ int main()
 			cvtColor(leftrgbImg,leftImg,CV_RGB2GRAY);
 			cvtColor(rightrgbImg,rightImg,CV_RGB2GRAY);
 			cout << leftImg.type() << endl;
+			*/
 			//img_to_display = leftImg.clone();
 			//imshow("display", img_to_display);
 			if(is_first_img)
@@ -123,6 +128,7 @@ int main()
 
 				}
 				*/
+				/*
 				ofstream out;
 				out.open("resultRp.csv",ios::out);
 				it2 = slam_system.state_estimator.img_manager.allRp.begin();
@@ -133,7 +139,8 @@ int main()
 				}
 				out.close();
 
-				out.open("resultRpnp.csv",ios::out);
+
+				out.open("resultRpnp.csv",ios::out);  //error is big
 				it2 = slam_system.state_estimator.img_manager.allRpnp.begin();
 				count = 0;
 				for(;it2 != slam_system.state_estimator.img_manager.allRpnp.end();it2++){
@@ -141,8 +148,24 @@ int main()
 				  count++; 
 				}
 				out.close();
+	
+				*/
+				ofstream out;
+				string trjname = "trj_" + prename + ".csv";
+				out.open(trjname,ios::out);
+				vector<Vector3d>::iterator it3;
+				it3 = slam_system.trj.begin();
+				count = 0;
+				for(;it3 != slam_system.trj.end();it3++){
+				  out << (*it3)[0] << ',' << (*it3)[1] << ',' << (*it3)[2] << ',' << endl;
+				  count++; 
+				}
+				out.close();
+	
+				 
 				
-				out.open("resultRpnp2.csv",ios::out);
+				string writename = "resultRpnp2_" + prename + ".csv";
+				out.open(writename,ios::out);
 				it2 = slam_system.state_estimator.img_manager.allRpnp2.begin();
 				count = 0;
 				for(;it2 != slam_system.state_estimator.img_manager.allRpnp2.end();it2++){
@@ -150,16 +173,7 @@ int main()
 				  count++; 
 				}
 				out.close();
-				
-				out.open("TpResult.csv",ios::out);
-				vector<Vector3d>::iterator it3;
-				it3 = slam_system.state_estimator.img_manager.allTp.begin();
-				count = 0;
-				for(;it3 != slam_system.state_estimator.img_manager.allTp.end();it3++){
-				  out << "Tp: " << count << endl  << (*it3) << endl;
-				  count++; 
-				}
-				out.close();
+
 			    
 			}
 		}
